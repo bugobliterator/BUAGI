@@ -53,8 +53,8 @@ public class EditorLineStatus extends JComponent {
 
 
   public EditorLineStatus(JEditTextArea textarea) {
-    this.textarea = textarea;
-    textarea.editorLineStatus = this;
+    //this.textarea = textarea;
+    //textarea.editorLineStatus = this;
 
     background = Theme.getColor("linestatus.bgcolor");
     font = Theme.getFont("linestatus.font");
