@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.List;
 import java.util.zip.*;
 
+import javax.swing.JComponent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -1603,16 +1604,16 @@ public class Sketch {
   /**
    * Handle export to applet.
    */
-  public boolean exportApplet(String appletPath, boolean usingProgrammer)
-    throws RunnerException, IOException, SerialException {
+  public boolean exportApplet(String pass, boolean usingProgrammer)
+    throws RunnerException, IOException, SerialException,InterruptedException, RunnerException {
 
     prepare();
       
     // build the sketch
-    editor.status.progressNotice(_("Compiling sketch..."));
-    String foundName = build(appletPath, false);
+    //editor.status.progressNotice(_("Compiling sketch..."));
+    //String foundName = build(appletPath, false);
     // (already reported) error during export, exit this function
-    if (foundName == null) return false;
+    //if (foundName == null) return false;
 
 //    // If name != exportSketchName, then that's weirdness
 //    // BUG unfortunately, that can also be a bug in the preproc :(
@@ -1624,12 +1625,45 @@ public class Sketch {
 //    }
 
     editor.status.progressNotice(_("Uploading..."));
-    upload(appletPath, foundName, usingProgrammer);
+    Process p;
+    File buildFolder=Base.getBuildFolder();
+    String buildPath = buildFolder.getAbsolutePath();
+    String fileName = "";
+    Integer i=0;
+    
+    while(i<buildFolder.listFiles().length)
+    {
+       if(buildFolder.listFiles()[i].getAbsolutePath().endsWith(".elf"))
+       {
+             fileName=buildFolder.listFiles()[i].getName();
+       }
+       i++;
+    }
+    String path = Base.getBeaglePath()+File.separator+"utility"+File.separator+name+".log";
+    String command = Base.getBeaglePath()+"/utility/send_exec.sh " + buildPath + " " + name + ".cpp.elf"+ " "+pass+" "+Editor.IP;
+    System.out.println(command);
+    p=Runtime.getRuntime().exec(command);
+    
+    int m=0;
+    
     editor.status.progressUpdate(100);
+    editor.status.progressNotice(_("Process Started"));
+    System.out.println("Press Upload again to stop Process!\n");
+    System.out.println("Check for Process logs in log folder");
+    String ch;
+    BufferedReader input = new BufferedReader(new InputStreamReader(
+            p.getErrorStream()));
+    while (editor.handleClick!=2) {
+              ch = input.readLine();
+              //if(ch!=null)
+              System.out.println(ch);
+              //if(ch.equals("lost connection")) break;
+    }
+    //upload(appletPath, foundName, usingProgrammer);
     return true;
   }
 
-  
+
   public void setCompilingProgress(int percent) {
     editor.status.progressUpdate(percent);
   }
