@@ -27,7 +27,7 @@
  *        Headers
  *----------------------------------------------------------------------------*/
 
-#include "virtual_main.h"
+#include "Arduino.h"
 #ifdef __cplusplus
 #endif
 
