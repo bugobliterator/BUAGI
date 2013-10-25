@@ -49,7 +49,7 @@ public class Compiler implements MessageConsumer {
   boolean sketchIsCompiled;
 
   RunnerException exception;
-
+   
   public Compiler() { }
 
   /**
@@ -61,6 +61,7 @@ public class Compiler implements MessageConsumer {
    * @return true if successful.
    * @throws RunnerException Only if there's a problem. Only then.
    */
+  
   public boolean compile(Sketch sketch,
                          String buildPath,
                          String primaryClassName,
@@ -70,10 +71,8 @@ public class Compiler implements MessageConsumer {
     this.primaryClassName = primaryClassName;
     this.verbose = verbose;
     this.sketchIsCompiled = false;
-
     // the pms object isn't used for anything but storage
     MessageStream pms = new MessageStream(this);
-
     String avrBasePath = Base.getAvrBasePath();
     Map<String, String> boardPreferences = Base.getBoardPreferences();
     String core = boardPreferences.get("build.core");
@@ -83,68 +82,104 @@ public class Compiler implements MessageConsumer {
       throw re;
     }
     String corePath;
-    
     if (core.indexOf(':') == -1) {
       Target t = Base.getTarget();
       File coreFolder = new File(new File(t.getFolder(), "cores"), core);
+      if(core.equals("beaglebone"))
+      {
+         coreFolder = new File(new File(Base.getBeagleLibFolder(), "cores"), "virtual");
+      }
       corePath = coreFolder.getAbsolutePath();
     } else {
       Target t = Base.targetsTable.get(core.substring(0, core.indexOf(':')));
       File coreFolder = new File(t.getFolder(), "cores");
       coreFolder = new File(coreFolder, core.substring(core.indexOf(':') + 1));
-      corePath = coreFolder.getAbsolutePath();
+      if(core.equals("beaglebone"))
+      {
+         coreFolder = new File(new File(Base.getBeagleLibFolder(), "cores"), "virtual");
+      }
+       corePath = coreFolder.getAbsolutePath();
     }
 
     String variant = boardPreferences.get("build.variant");
     String variantPath = null;
-    
     if (variant != null) {
       if (variant.indexOf(':') == -1) {
+        File variantFolder;
+        if(variant.equals("beaglebone"))
+        {
+            variantFolder = new File(new File(Base.getBeagleLibFolder(), "variants"), variant);
+            variantPath = variantFolder.getAbsolutePath();
+        }
+        else{
 	Target t = Base.getTarget();
-	File variantFolder = new File(new File(t.getFolder(), "variants"), variant);
+	variantFolder = new File(new File(t.getFolder(), "variants"), variant);
 	variantPath = variantFolder.getAbsolutePath();
-      } else {
+        }
+        } 
+      else {
+        File variantFolder;
+        if(variant.equals("beaglebone"))
+        {
+            variantFolder = new File(new File(Base.getBeagleLibFolder(), "variants"), variant);
+            variantPath = variantFolder.getAbsolutePath();
+        }
+        else{
 	Target t = Base.targetsTable.get(variant.substring(0, variant.indexOf(':')));
-	File variantFolder = new File(t.getFolder(), "variants");
+	 variantFolder = new File(t.getFolder(), "variants");
 	variantFolder = new File(variantFolder, variant.substring(variant.indexOf(':') + 1));
 	variantPath = variantFolder.getAbsolutePath();
+        }
       }
     }
 
     List<File> objectFiles = new ArrayList<File>();
 
    // 0. include paths for core + all libraries
-
+   System.out.println("including stuff......");
    sketch.setCompilingProgress(20);
    List includePaths = new ArrayList();
+   File libpath = new File(Base.getBeagleLibPath(),"libraries");
    includePaths.add(corePath);
    if (variantPath != null) includePaths.add(variantPath);
+
    for (File file : sketch.getImportedLibraries()) {
      includePaths.add(file.getPath());
    }
-
+   
+   
    // 1. compile the sketch (already in the buildPath)
-
-   sketch.setCompilingProgress(30);
+   System.out.println("compiling stuff......");
+   String basePath;
+   if(core.equals("beaglebone")){     
+      basePath=Base.getBeaglePath(); 
+   }
+   else{
+      basePath=avrBasePath;
+   }
+   sketch.setCompilingProgress(40);
    objectFiles.addAll(
-     compileFiles(avrBasePath, buildPath, includePaths,
+     compileFiles( basePath, buildPath, includePaths,
                findFilesInPath(buildPath, "S", false),
                findFilesInPath(buildPath, "c", false),
                findFilesInPath(buildPath, "cpp", false),
                boardPreferences));
    sketchIsCompiled = true;
 
-   // 2. compile the libraries, outputting .o files to: <buildPath>/<library>/
-
-   sketch.setCompilingProgress(40);
+  // 2. compile the libraries, outputting .o files to: <buildPath>/<library>/
+   
+   System.out.println("outputting stuff......");
+   sketch.setCompilingProgress(60);
    for (File libraryFolder : sketch.getImportedLibraries()) {
      File outputFolder = new File(buildPath, libraryFolder.getName());
      File utilityFolder = new File(libraryFolder, "utility");
      createFolder(outputFolder);
      // this library can use includes in its utility/ folder
      includePaths.add(utilityFolder.getAbsolutePath());
+     
+
      objectFiles.addAll(
-       compileFiles(avrBasePath, outputFolder.getAbsolutePath(), includePaths,
+       compileFiles(basePath, outputFolder.getAbsolutePath(), includePaths,
                findFilesInFolder(libraryFolder, "S", false),
                findFilesInFolder(libraryFolder, "c", false),
                findFilesInFolder(libraryFolder, "cpp", false),
@@ -152,7 +187,7 @@ public class Compiler implements MessageConsumer {
      outputFolder = new File(outputFolder, "utility");
      createFolder(outputFolder);
      objectFiles.addAll(
-       compileFiles(avrBasePath, outputFolder.getAbsolutePath(), includePaths,
+       compileFiles(basePath, outputFolder.getAbsolutePath(), includePaths,
                findFilesInFolder(utilityFolder, "S", false),
                findFilesInFolder(utilityFolder, "c", false),
                findFilesInFolder(utilityFolder, "cpp", false),
@@ -163,21 +198,24 @@ public class Compiler implements MessageConsumer {
 
    // 3. compile the core, outputting .o files to <buildPath> and then
    // collecting them into the core.a library file.
-
-   sketch.setCompilingProgress(50);
+  
+   System.out.println("collecting stuff......");
+  sketch.setCompilingProgress(80);
   includePaths.clear();
   includePaths.add(corePath);  // include path for core only
   if (variantPath != null) includePaths.add(variantPath);
+ 
   List<File> coreObjectFiles =
-    compileFiles(avrBasePath, buildPath, includePaths,
+    compileFiles(basePath, buildPath, includePaths,
               findFilesInPath(corePath, "S", true),
               findFilesInPath(corePath, "c", true),
               findFilesInPath(corePath, "cpp", true),
               boardPreferences);
 
    String runtimeLibraryName = buildPath + File.separator + "core.a";
+   
    List baseCommandAR = new ArrayList(Arrays.asList(new String[] {
-     avrBasePath + "avr-ar",
+     "/usr/local/angstrom/arm/bin/arm-angstrom-linux-gnueabi-ar",
      "rcs",
      runtimeLibraryName
    }));
@@ -186,68 +224,32 @@ public class Compiler implements MessageConsumer {
      commandAR.add(file.getAbsolutePath());
      execAsynchronously(commandAR);
    }
-
+   
     // 4. link it all together into the .elf file
     // For atmega2560, need --relax linker option to link larger
     // programs correctly.
-    String optRelax = "";
-    String atmega2560 = new String ("atmega2560");
-    if ( atmega2560.equals(boardPreferences.get("build.mcu")) ) {
-        optRelax = new String(",--relax");
-    }
-   sketch.setCompilingProgress(60);
+    
+    System.out.println("linking stuff......");
+    
+    sketch.setCompilingProgress(90);
     List baseCommandLinker = new ArrayList(Arrays.asList(new String[] {
-      avrBasePath + "avr-gcc",
-      "-Os",
-      "-Wl,--gc-sections"+optRelax,
-      "-mmcu=" + boardPreferences.get("build.mcu"),
+      "/usr/local/angstrom/arm/bin/arm-angstrom-linux-gnueabi-g++",
+      "-Wl,--gc-sections",
+      "-lrt",
       "-o",
       buildPath + File.separator + primaryClassName + ".elf"
-    }));
-
+    })); 
     for (File file : objectFiles) {
       baseCommandLinker.add(file.getAbsolutePath());
     }
 
     baseCommandLinker.add(runtimeLibraryName);
-    baseCommandLinker.add("-L" + buildPath);
-    baseCommandLinker.add("-lm");
 
     execAsynchronously(baseCommandLinker);
+    sketch.setCompilingProgress(100);
+    
+    System.out.println("Executable generated @ "+buildPath+" !!!!!! Click upload to upload it to beaglebone");
 
-    List baseCommandObjcopy = new ArrayList(Arrays.asList(new String[] {
-      avrBasePath + "avr-objcopy",
-      "-O",
-      "-R",
-    }));
-    
-    List commandObjcopy;
-
-    // 5. extract EEPROM data (from EEMEM directive) to .eep file.
-    sketch.setCompilingProgress(70);
-    commandObjcopy = new ArrayList(baseCommandObjcopy);
-    commandObjcopy.add(2, "ihex");
-    commandObjcopy.set(3, "-j");
-    commandObjcopy.add(".eeprom");
-    commandObjcopy.add("--set-section-flags=.eeprom=alloc,load");
-    commandObjcopy.add("--no-change-warnings");
-    commandObjcopy.add("--change-section-lma");
-    commandObjcopy.add(".eeprom=0");
-    commandObjcopy.add(buildPath + File.separator + primaryClassName + ".elf");
-    commandObjcopy.add(buildPath + File.separator + primaryClassName + ".eep");
-    execAsynchronously(commandObjcopy);
-    
-    // 6. build the .hex file
-    sketch.setCompilingProgress(80);
-    commandObjcopy = new ArrayList(baseCommandObjcopy);
-    commandObjcopy.add(2, "ihex");
-    commandObjcopy.add(".eeprom"); // remove eeprom data
-    commandObjcopy.add(buildPath + File.separator + primaryClassName + ".elf");
-    commandObjcopy.add(buildPath + File.separator + primaryClassName + ".hex");
-    execAsynchronously(commandObjcopy);
-    
-    sketch.setCompilingProgress(90);
-   
     return true;
   }
 
@@ -268,6 +270,7 @@ public class Compiler implements MessageConsumer {
                                              file.getAbsolutePath(),
                                              objectPath,
                                              boardPreferences));
+    
     }
  		
     for (File file : cSources) {
@@ -382,7 +385,7 @@ public class Compiler implements MessageConsumer {
 
     firstErrorFound = false;  // haven't found any errors yet
     secondErrorFound = false;
-
+      
     Process process;
     
     try {
@@ -392,7 +395,7 @@ public class Compiler implements MessageConsumer {
       re.hideStackTrace();
       throw re;
     }
-
+    
     MessageSiphon in = new MessageSiphon(process.getInputStream(), this);
     MessageSiphon err = new MessageSiphon(process.getErrorStream(), this);
 
@@ -429,7 +432,8 @@ public class Compiler implements MessageConsumer {
       throw re;
     }
   }
-
+   
+  
 
   /**
    * Part of the MessageConsumer interface, this is called
@@ -544,15 +548,9 @@ public class Compiler implements MessageConsumer {
   static private List getCommandCompilerS(String avrBasePath, List includePaths,
     String sourceName, String objectName, Map<String, String> boardPreferences) {
     List baseCommandCompiler = new ArrayList(Arrays.asList(new String[] {
-      avrBasePath + "avr-gcc",
-      "-c", // compile, don't link
-      "-g", // include debugging info (so errors include line numbers)
-      "-assembler-with-cpp",
-      "-mmcu=" + boardPreferences.get("build.mcu"),
-      "-DF_CPU=" + boardPreferences.get("build.f_cpu"),      
-      "-DARDUINO=" + Base.REVISION,
-      "-DUSB_VID=" + boardPreferences.get("build.vid"),
-      "-DUSB_PID=" + boardPreferences.get("build.pid"),
+      "/usr/local/angstrom/arm/bin/arm-angstrom-linux-gnueabi-gcc",
+      "-MMD", // compile, don't link
+      "-c", // include debugging info (so errors include line numbers)
     }));
 
     for (int i = 0; i < includePaths.size(); i++) {
@@ -570,19 +568,9 @@ public class Compiler implements MessageConsumer {
     String sourceName, String objectName, Map<String, String> boardPreferences) {
 
     List baseCommandCompiler = new ArrayList(Arrays.asList(new String[] {
-      avrBasePath + "avr-gcc",
-      "-c", // compile, don't link
-      "-g", // include debugging info (so errors include line numbers)
-      "-Os", // optimize for size
-      Preferences.getBoolean("build.verbose") ? "-Wall" : "-w", // show warnings if verbose
-      "-ffunction-sections", // place each function in its own section
-      "-fdata-sections",
-      "-mmcu=" + boardPreferences.get("build.mcu"),
-      "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
-      "-MMD", // output dependancy info
-      "-DUSB_VID=" + boardPreferences.get("build.vid"),
-      "-DUSB_PID=" + boardPreferences.get("build.pid"),
-      "-DARDUINO=" + Base.REVISION, 
+      "/usr/local/angstrom/arm/bin/arm-angstrom-linux-gnueabi-gcc",
+      "-MMD", // compile, don't link
+      "-c", // include debugging info (so errors include line numbers)
     }));
 		
     for (int i = 0; i < includePaths.size(); i++) {
@@ -602,20 +590,9 @@ public class Compiler implements MessageConsumer {
     Map<String, String> boardPreferences) {
     
     List baseCommandCompilerCPP = new ArrayList(Arrays.asList(new String[] {
-      avrBasePath + "avr-g++",
-      "-c", // compile, don't link
-      "-g", // include debugging info (so errors include line numbers)
-      "-Os", // optimize for size
-      Preferences.getBoolean("build.verbose") ? "-Wall" : "-w", // show warnings if verbose
-      "-fno-exceptions",
-      "-ffunction-sections", // place each function in its own section
-      "-fdata-sections",
-      "-mmcu=" + boardPreferences.get("build.mcu"),
-      "-DF_CPU=" + boardPreferences.get("build.f_cpu"),
-      "-MMD", // output dependancy info
-      "-DUSB_VID=" + boardPreferences.get("build.vid"),
-      "-DUSB_PID=" + boardPreferences.get("build.pid"),      
-      "-DARDUINO=" + Base.REVISION,
+      "/usr/local/angstrom/arm/bin/arm-angstrom-linux-gnueabi-gcc",
+      "-MMD", // compile, don't link
+      "-c", // include debugging info (so errors include line numbers)
     }));
 
     for (int i = 0; i < includePaths.size(); i++) {
