@@ -5,7 +5,7 @@
   Two-wire modifications   (0.2) by Sebastian Gassner
   Combination version   (0.3) by Tom Igoe and David Mellis
   Bug fix for four-wire   (0.4) by Tom Igoe, bug fix from Noah Shibley  
-
+  Include linux-virtual.h by Anuj Deshpande (2013)
   Drives a unipolar or bipolar stepper motor using  2 wires or 4 wires
 
   When wiring multiple stepper motors to a microcontroller,
@@ -45,7 +45,7 @@ http://www.arduino.cc/en/Tutorial/Stepper
  */
 
 
-#include "Arduino.h"
+#include "linux-virtual.h"
 #include "Stepper.h"
 
 /*

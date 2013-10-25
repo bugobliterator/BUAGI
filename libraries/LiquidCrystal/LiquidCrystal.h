@@ -1,8 +1,9 @@
 #ifndef LiquidCrystal_h
 #define LiquidCrystal_h
 
+#include<cstddef>
 #include <inttypes.h>
-#include "Print.h"
+#include "../../cores/virtual/Print.h"
 
 // commands
 #define LCD_CLEARDISPLAY 0x01
@@ -79,7 +80,7 @@ public:
 
   void createChar(uint8_t, uint8_t[]);
   void setCursor(uint8_t, uint8_t); 
-  virtual size_t write(uint8_t);
+  size_t write(uint8_t);
   void command(uint8_t);
   
   using Print::write;

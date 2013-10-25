@@ -1,66 +1,69 @@
 /*
- * Copyright (c) 2010 by Cristian Maglie <c.maglie@bug.st>
- * SPI Master library for arduino.
+ * Copyright (c) 2013 by Anuj Deshpande <anujdeshpande92@gmail.com>
+ * SPI Library for Userspace Arduino
  *
  * This file is free software; you can redistribute it and/or modify
  * it under the terms of either the GNU General Public License version 2
  * or the GNU Lesser General Public License version 2.1, both as
  * published by the Free Software Foundation.
  */
-
-#include "pins_arduino.h"
+#include <fcntl.h>
+#include <inttypes.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+#include <linux/types.h>
+#include <linux/spi/spidev.h>
 #include "SPI.h"
+#include "linux-virtual.h"
 
 SPIClass SPI;
+SPIClass::SPIClass() {
+  tr.len = 1;
+  tr.speed_hz = 4000000 ; // default set to 4 Mhz
+  tr.bits_per_word = 8;
+  device="/dev/spidev1.0";
+}
+void SPIClass::begin(){
 
-void SPIClass::begin() {
-
-  // Set SS to high so a connected chip will be "deselected" by default
-  digitalWrite(SS, HIGH);
-
-  // When the SS pin is set as OUTPUT, it can be used as
-  // a general purpose output port (it doesn't influence
-  // SPI operations).
-  pinMode(SS, OUTPUT);
-
-  // Warning: if the SS pin ever becomes a LOW INPUT then SPI
-  // automatically switches to Slave, so the data direction of
-  // the SS pin MUST be kept as OUTPUT.
-  SPCR |= _BV(MSTR);
-  SPCR |= _BV(SPE);
-
-  // Set direction register for SCK and MOSI pin.
-  // MISO pin automatically overrides to INPUT.
-  // By doing this AFTER enabling SPI, we avoid accidentally
-  // clocking in a single bit since the lines go directly
-  // from "input" to SPI control.  
-  // http://code.google.com/p/arduino/issues/detail?id=888
-  pinMode(SCK, OUTPUT);
-  pinMode(MOSI, OUTPUT);
+  fd=open(device,O_RDWR);
+  if(fd < 0){
+	perror("Can't open device");
+	abort();
+  }
+  ret = ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &tr.bits_per_word);
+  if (ret == -1)
+	perror("SPI_IOC_WR_BITS_PER_WORD not set");
 }
 
+byte SPIClass::transfer(byte data) {
+  // ret = ioctl(fd, SPI_IOC_MESSAGE(1), &tr);
+  // if (ret < 1)
+  // 	perror("SPI_IOC_MESSAGE not sent");
 
-void SPIClass::end() {
-  SPCR &= ~_BV(SPE);
+  return data;
 }
 
-void SPIClass::setBitOrder(uint8_t bitOrder)
-{
-  if(bitOrder == LSBFIRST) {
-    SPCR |= _BV(DORD);
-  } else {
-    SPCR &= ~(_BV(DORD));
+void SPIClass::setBitOrder(uint8_t bOrder) {
+  if(bOrder == LSBFIRST) {
+	bitOrder=LSBFIRST;
+  }
+  else {
+	bitOrder=MSBFIRST;
   }
 }
 
-void SPIClass::setDataMode(uint8_t mode)
-{
-  SPCR = (SPCR & ~SPI_MODE_MASK) | mode;
+void SPIClass::setDataMode(uint8_t mode) {
+  ret = ioctl(fd, SPI_IOC_WR_MODE, &mode);
+  if (ret == -1)
+	perror("SPI_IOC_WR_MODE not set");
 }
 
-void SPIClass::setClockDivider(uint8_t rate)
-{
-  SPCR = (SPCR & ~SPI_CLOCK_MASK) | (rate & SPI_CLOCK_MASK);
-  SPSR = (SPSR & ~SPI_2XCLOCK_MASK) | ((rate >> 2) & SPI_2XCLOCK_MASK);
+void SPIClass::setClockDivider(uint32_t rate) {
+  ret = ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &rate);
+  if (ret == -1)
+	perror("SPI_IOC_WR_MAX_SPEED_HZ not set");
 }
 
+void SPIClass::end() {
+  close(fd);
+}
