@@ -28,12 +28,12 @@ import java.io.*;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import processing.app.debug.Compiler;
 import processing.app.debug.Target;
 import processing.app.helpers.FileUtils;
 import processing.app.helpers.filefilters.OnlyDirs;
-import processing.app.javax.swing.filechooser.FileNameExtensionFilter;
 import processing.app.tools.ZipDeflater;
 import processing.core.*;
 import static processing.app.I18n._;
@@ -112,6 +112,13 @@ public class Base {
 
   static public void main(String args[]) {
     initPlatform();
+    
+    //setting environment variables
+    Process p; 
+    try{
+    p = Runtime.getRuntime().exec("export PATH=/usr/local/angstrom/arm/bin:$PATH ; export CROSS_COMPILE=arm-angstrom-linux-gnueabi-");
+    }
+    catch (IOException e) {  p=null;  }
 
     // run static initialization that grabs all the prefs
     Preferences.init(null);
@@ -1542,8 +1549,8 @@ public class Base {
   static public String getToolsPath() {
     return toolsFolder.getAbsolutePath();
   }
-
-
+  
+ 
   static public File getHardwareFolder() {
     // calculate on the fly because it's needed by Preferences.init() to find
     // the boards.txt and programmers.txt preferences files (which happens
@@ -1553,6 +1560,7 @@ public class Base {
   
   
   static public String getHardwarePath() {
+    //if(Preferences.get("target")
     return getHardwareFolder().getAbsolutePath();
   }
   
@@ -1566,7 +1574,22 @@ public class Base {
     return path;
   }
   
+  static public File getBeagleFolder() {
+    return getContentFile("Userspace-Arduino");
+  }
   
+  static public String getBeaglePath() {
+   return getBeagleFolder().getAbsolutePath();
+  }
+  
+  static public File getBeagleLibFolder() {
+   return new File(getBeagleFolder(),"libarduino");
+  }
+  
+  static public String getBeagleLibPath() {
+   return getBeagleLibFolder().getAbsolutePath();
+  }
+
   static public Target getTarget() {
     return Base.targetsTable.get(Preferences.get("target"));
   }
