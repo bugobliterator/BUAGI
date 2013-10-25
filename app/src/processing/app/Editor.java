@@ -41,7 +41,8 @@ import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.text.*;
 import javax.swing.undo.*;
-
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import gnu.io.*;
 
 /**
@@ -58,7 +59,7 @@ public class Editor extends JFrame implements RunnerListener {
     "                                                                     " +
     "                                                                     " +
     "                                                                     ";
-
+  int handleClick=0;
   /** Command on Mac OS X, Ctrl on Windows and Linux */
   static final int SHORTCUT_KEY_MASK =
     Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
@@ -147,7 +148,7 @@ public class Editor extends JFrame implements RunnerListener {
   Runnable stopHandler;
   Runnable exportHandler;
   Runnable exportAppHandler;
-
+  public static String IP = "192.168.7.2";
 
   public Editor(Base ibase, String path, int[] location) {
     super("Arduino");
@@ -538,6 +539,7 @@ public class Editor extends JFrame implements RunnerListener {
     item = newJMenuItem(_("Upload"), 'U');
     item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
+          
           handleExport(false);
         }
       });
@@ -546,6 +548,7 @@ public class Editor extends JFrame implements RunnerListener {
     item = newJMenuItemShift(_("Upload Using Programmer"), 'U');
     item.addActionListener(new ActionListener() {
         public void actionPerformed(ActionEvent e) {
+          
           handleExport(true);
         }
       });
@@ -2197,7 +2200,7 @@ public class Editor extends JFrame implements RunnerListener {
     // Set the title of the window to "sketch_070752a - Processing 0126"
     setTitle(
       I18n.format(
-	_("{0} | Arduino {1}"),
+	_("{0} | BUAGI {1}"),
 	sketch.getName(),
 	Base.VERSION_NAME
       )
@@ -2366,40 +2369,86 @@ public class Editor extends JFrame implements RunnerListener {
 
     new Thread(usingProgrammer ? exportAppHandler : exportHandler).start();
   }
-
+   
   // DAM: in Arduino, this is upload
   class DefaultExportHandler implements Runnable {
+       
     public void run() {
-
-      try {
-        serialMonitor.closeSerialPort();
-        serialMonitor.setVisible(false);
-            
-        uploading = true;
-          
-        boolean success = sketch.exportApplet(false);
-        if (success) {
-          statusNotice(_("Done uploading."));
-        } else {
-          // error message will already be visible
+      handleClick++;
+      String input=null;
+      InetAddress host=null;
+    if(handleClick==1) {  
+      while(true)
+      {
+        if(handleClick!=1) break;
+        try {   
+                
+                System.out.println("Searching beaglebone...");
+                host = InetAddress.getByName("beaglebone.local");
+                System.out.println(host.getHostAddress());
+                IP=host.getHostAddress();
+              } catch (UnknownHostException ex) {
+                    IP=null;
+              }
+        if(IP!=null) break;
+            JOptionPane.showMessageDialog(null,"Beaglebone not connected!!!","Error!!",JOptionPane.WARNING_MESSAGE);
+     }
+      
+      lineStatus.setSerialPort(IP);
+      lineStatus.repaint();
+        
+                input =  JOptionPane.showInputDialog("SSH Password (leave blank if none):");
+                uploading = true;
+                boolean success = false;
+              try{
+                   success = sketch.exportApplet(input,false);
+                      }
+              catch(Exception err){}
+              if (success) {
+                  statusNotice(_("Done uploading."));
+              } 
+              else { 
+                        statusNotice(_("Process Exited."));
+                        status.unprogress();
+                        uploading = false;
+                        toolbar.deactivate(EditorToolbar.EXPORT);
+                        handleClick=0;
+              }
         }
-      } catch (SerialNotFoundException e) {
-        populateSerialMenu();
-        if (serialMenu.getItemCount() == 0) statusError(e);
-        else if (serialPrompt()) run();
-        else statusNotice(_("Upload canceled."));
-      } catch (RunnerException e) {
-        //statusError("Error during upload.");
-        //e.printStackTrace();
-        status.unprogress();
-        statusError(e);
-      } catch (Exception e) {
-        e.printStackTrace();
+        else {        boolean retry =true;
+                      Process p;
+                      while(retry)
+                      {
+                        try{
+                        String command;
+                        System.out.println(sketch.getName());
+                        command=Base.getBeaglePath()+"/utility/remotekill.sh "+sketch.getName()+" "+input;
+                        
+                        p=Runtime.getRuntime().exec(command);
+                        System.out.println("Process stoped");
+                        BufferedReader input1 = new BufferedReader(new InputStreamReader(
+                                     p.getErrorStream()));
+                        String ch1 = input1.readLine();
+                        while (ch1!=null) {
+                                  ch1 = input1.readLine();
+                                  System.out.println(ch1);
+                        }
+                        retry = false;
+                        }
+                        catch(IOException err){
+                        retry = true;
+                        }
+                      }
+                        statusNotice(_("Process Exited."));
+                        status.unprogress();
+                        uploading = false;
+                        toolbar.deactivate(EditorToolbar.EXPORT);
+                        handleClick=0;
+                        File file = new File(Base.getContentFile("log"),sketch.getName()+".cpp.elf.log");
+                        if(file.delete()) {
+                             System.out.println("log successfully deleted");
+                         }
       }
-      status.unprogress();
-      uploading = false;
-      //toolbar.clear();
-      toolbar.deactivate(EditorToolbar.EXPORT);
     }
   }
 
@@ -2650,7 +2699,7 @@ public class Editor extends JFrame implements RunnerListener {
   protected void onBoardOrPortChange() {
     Map<String, String> boardPreferences =  Base.getBoardPreferences();
     lineStatus.setBoardName(boardPreferences.get("name"));
-    lineStatus.setSerialPort(Preferences.get("serial.port"));
+    lineStatus.setSerialPort(IP);
     lineStatus.repaint();
   }
 
