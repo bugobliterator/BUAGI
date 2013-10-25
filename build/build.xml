@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="Arduino" default="build">
+<project name="BUAGI" default="build">
   <!--echo message="os.name = ${os.name}" /-->
   <!--echo message="os.arch = ${os.arch}" /-->
   <!--echo message="os.version = ${os.version}" /-->
@@ -10,7 +10,7 @@
   <condition property="linux"><os family="unix" /></condition>
   <condition property="linux32"><os family="unix" arch="i386" /></condition>
   <condition property="linux64"><os family="unix" arch="amd64" /></condition>
-  
+  <property name="version" value="0.0.1"/>
   <condition property="platform" 
 	     value="macosx"><os family="mac" /></condition>
   <condition property="platform" 
@@ -81,6 +81,11 @@
     <copy todir="${target.path}/tools">
       <fileset dir="shared/tools" />
     </copy>
+    
+    <!-- copy shared tools folder -->
+    <copy todir="${target.path}/Userspace-Arduino">
+      <fileset dir="Userspace-Arduino" />
+    </copy> 
     
     <!-- copy library folder -->
     <copy todir="${target.path}/libraries">
@@ -348,7 +353,8 @@
     <copy todir="linux/work/hardware">
       <fileset dir="linux/dist" includes="tools/**" />
     </copy>
-
+    
+  
     <chmod perm="755" file="linux/work/hardware/tools/avrdude" />
   </target>
 
