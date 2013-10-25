@@ -1,7 +1,8 @@
 #ifndef linux_virtual_h
 #define linux_virtual_h
 
-#include "virtual_main.h"
+//#include "virtual_main.h"
+#include "Arduino.h"
 #include <math.h>
 #include "binary.h"
 

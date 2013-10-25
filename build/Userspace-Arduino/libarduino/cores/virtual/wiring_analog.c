@@ -22,7 +22,7 @@
  */
 
 #include "wiring_analog.h"
-#include "virtual_main.h"
+#include "Arduino.h"
 #include "sysfs.h"
 #include <math.h>
 #include <stdint.h>

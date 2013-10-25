@@ -18,7 +18,7 @@
 */
 
 #include <stdlib.h>
-#include "virtual_main.h"
+#include "Arduino.h"
 #include "WString.h"
 
 
