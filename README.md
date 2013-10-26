@@ -1,5 +1,3 @@
-<>Repo Under Construction...
-======
 BeagleBone-Userspace-Arduino-Graphical-IDE
 =====
 
@@ -13,6 +11,8 @@ The project is compatible with beaglebone and beaglebone black projects. Only li
 
 ###Seting up BUAGI
 
+* Make sure you have the latest version of oracle jdk installed on your system if not follow these steps at [wikihow](http://www.oracle.com/technetwork/java/javase/index-137561.html) to install oracle java development kit onto your system.
+Some Linux platforms, such as Red Hat and SuSE, are RPM-based, which provide an automated way to install software. You can get it from [here](http://www.oracle.com/technetwork/java/javase/index-137561.html).
 * Make sure you have the latest production image of the Angstrom Distribution on the Beaglebone Black 
 [here](http://circuitco.com/support/index.php?title=Updating_The_Software).
 * Check if your operating system is i686 or x86_64 based using following command
@@ -31,8 +31,12 @@ The project is compatible with beaglebone and beaglebone black projects. Only li
          sudo tar -C / -xjf name-of-toolchain-you-downloaded.tar.bz2
   *check that toolchain binaries are in /usr/local/angstrom/arm/bin*
 * Get this repository
+ For contributors or people having huge bandwidth clone from 
 
          git clone https://github.com/bugobliterator/BUAGI.git && cd BUAGI
+  
+ Else just download approx 10MB zip file of the repo.
+
 * Copy the Bacon-overlay to the Beaglebone Black
             
          scp Userspace-Arduino/overlay/BB-BONE-BACONE-00A0.dtbo root@192.168.7.2:/lib/firmware
@@ -42,6 +46,12 @@ The project is compatible with beaglebone and beaglebone black projects. Only li
    
          sudo apt-get update 
          sudo apt-get install sshpass
+* Change directory to BUAGI/build folder then
+         
+         sudo ant run
+
+* You should see a arduino window open up. To access the arduino executable change directory to BUAGI/build/linux/work. And run arduino executable with elevated privileges.
+
 
 ###Running An Example
 * Open BUAGI executable by opening the folder in elevated Privileges mode.
