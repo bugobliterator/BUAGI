@@ -12,7 +12,7 @@ The project is compatible with beaglebone and beaglebone black projects. Only li
 ###Seting up BUAGI
 
 * Make sure you have the latest version of oracle jdk installed on your system if not follow these steps at [wikihow](http://www.oracle.com/technetwork/java/javase/index-137561.html) to install oracle java development kit onto your system.
-Some Linux platforms, such as Red Hat and SuSE, are RPM-based, which provide an automated way to install software. You can get it from [here](http://www.oracle.com/technetwork/java/javase/index-137561.html).
+Some Linux platforms, such as Red Hat and SuSE, are RPM-based, which provide an automated way to install software. You can get jdk rpm from [here](http://www.oracle.com/technetwork/java/javase/index-137561.html).
 * Make sure you have the latest production image of the Angstrom Distribution on the Beaglebone Black 
 [here](http://circuitco.com/support/index.php?title=Updating_The_Software).
 * Check if your operating system is i686 or x86_64 based using following command
