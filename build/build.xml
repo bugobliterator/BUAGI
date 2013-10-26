@@ -86,7 +86,15 @@
     <copy todir="${target.path}/Userspace-Arduino">
       <fileset dir="Userspace-Arduino" />
     </copy> 
-    
+
+    <!-- log folder -->
+    <copy todir="${target.path}/log">
+      <fileset dir="log" />
+    </copy> 
+
+    <!-- make utility files executable -->
+    <chmod file="${target.path}/Userspace-Arduino/utility/*.sh" perm="+x" />
+
     <!-- copy library folder -->
     <copy todir="${target.path}/libraries">
       <fileset dir="../libraries" />
