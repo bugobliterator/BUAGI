@@ -9,7 +9,7 @@ BUAGI is developed using the source code of [Arduino](https://github.com/arduino
 The project for now focuses on IDE for userspace compilation and then onboard execution but will be including IDE onboard for native compilation and execution at later stages.
 The project is compatible with beaglebone and beaglebone black projects. Only linux based OSes are supported. The project was built and tested over linux mint and beaglebone board.
 
-###Seting up BUAGI
+###Setting up BUAGI
 
 * Make sure you have the latest version of oracle jdk installed on your system if not follow these steps at [wikihow](http://www.oracle.com/technetwork/java/javase/index-137561.html) to install oracle java development kit onto your system.
 Some Linux platforms, such as Red Hat and SuSE, are RPM-based, which provide an automated way to install software. You can get jdk rpm from [here](http://www.oracle.com/technetwork/java/javase/index-137561.html).
