@@ -59,7 +59,7 @@ Some Linux platforms, such as Red Hat and SuSE, are RPM-based, which provide an 
 * Click on the verify button in toolbar.
 * Wait for compilation and executable generation to complete.
 * Click on the Upload button.
-* The prompt will popup asking password in terminal (note: this method of entering password is an issue and was tried to resolve using sshpass but it was unreliable so omiitted my next trial will be connecting to ssh using java api).
+* The prompt will popup asking password.
 * Then another prompt asking ssh password will popup press cancel if you haven't selected any.
 * The executable will be uploaded to the board and will be executed.
 * All the outputs except errors of connection failure (those will be displayed on console below) will be saved in a log in log folder.
