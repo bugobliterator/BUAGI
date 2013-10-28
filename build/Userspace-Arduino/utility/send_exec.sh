@@ -9,18 +9,18 @@
 USERNAME="root"
 LOCATION=$1
 FILE=$2
-PASSWORD=$3
-IP=$4
+PASSWORD=" "
+IP="beaglebone.local"
 EXECUTABLE=${FILE}
 echo
 echo -n "Transfering $LOCATION/${EXECUTABLE} to ${USERNAME}@${IP}..."
-/usr/bin/sshpass -p ${PASSWORD} scp -q $LOCATION/${EXECUTABLE} ${USERNAME}@${IP}:~/${FILE}
+scp ${LOCATION}/${EXECUTABLE} root@beaglebone.local:~/${FILE}
 echo "Executing!"
 echo
 echo
 echo "Begin output log"
 echo "===================="
-/usr/bin/sshpass -p ${PASSWORD} ssh ${USERNAME}@${IP} -t ./${FILE} > log/${FILE}.log 2> log/${FILE}.log
+ssh ${USERNAME}@${IP} -t ./${FILE} > log/${FILE}.log 2> log/${FILE}.log
 
 return_result=$?
 

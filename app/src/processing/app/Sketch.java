@@ -1655,7 +1655,7 @@ public class Sketch {
             p.getErrorStream()));
     while (editor.handleClick!=2) {
               ch = input.readLine();
-              //if(ch!=null)
+              if(ch!=null)
               System.out.println(ch);
               //if(ch.equals("lost connection")) break;
     }
