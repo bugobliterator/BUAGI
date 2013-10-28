@@ -54,12 +54,12 @@ Some Linux platforms, such as Red Hat and SuSE, are RPM-based, which provide an 
 
 
 ###Running An Example
-* Open BUAGI executable by opening the folder in elevated Privileges mode.
+* Open arduino executable in terminal by opening the folder in elevated Privileges mode .
 * Go-to Files->Examples->Beagle-Examples->--select any example--
 * Click on the verify button in toolbar.
 * Wait for compilation and executable generation to complete.
 * Click on the Upload button.
-* The prompt will popup asking IP address of beaglebone, cancel if you want auto search or enter if there is problem connecting.
+* The prompt will popup asking password in terminal (note: this method of entering password is an issue and was tried to resolve using sshpass but it was unreliable so omiitted my next trial will be connecting to ssh using java api).
 * Then another prompt asking ssh password will popup press cancel if you haven't selected any.
 * The executable will be uploaded to the board and will be executed.
 * All the outputs except errors of connection failure (those will be displayed on console below) will be saved in a log in log folder.
